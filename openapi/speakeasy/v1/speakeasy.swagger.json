@@ -1,0 +1,226 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "Speakeasy API",
+    "description": "Speakeasy API description",
+    "version": "1.0"
+  },
+  "tags": [
+    {
+      "name": "drinks",
+      "description": "Drinks API"
+    },
+    {
+      "name": "SpeakeasyService"
+    }
+  ],
+  "host": "127.0.0.1:8080",
+  "schemes": [
+    "https"
+  ],
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "paths": {
+    "/v1/drinks": {
+      "get": {
+        "summary": "Get a list of drinks",
+        "description": "Returns a list of all drinks available at the speakeasy",
+        "operationId": "listAllDrinks",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "$ref": "#/definitions/speakeasyDrink"
+              }
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "empty",
+            "in": "query",
+            "required": false,
+            "type": "object"
+          }
+        ],
+        "tags": [
+          "drinks"
+        ]
+      }
+    },
+    "/v1/drinks/{productCode}": {
+      "get": {
+        "summary": "Get a drink",
+        "operationId": "getDrink",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/speakeasyDrink"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "productCode",
+            "description": "Unique drink identifier",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "format": "uuid"
+          }
+        ],
+        "tags": [
+          "drinks"
+        ],
+        "x-speakeasy-retries": {
+          "backoff": {
+            "exponent": 1.5,
+            "initialInterval": 500,
+            "maxElapsedTime": 3600000,
+            "maxInterval": 60000
+          },
+          "retryConnectionErrors": true,
+          "statusCodes": [
+            "5XX"
+          ],
+          "strategy": "backoff"
+        }
+      }
+    }
+  },
+  "definitions": {
+    "DrinkDrinkType": {
+      "type": "string",
+      "enum": [
+        "DRINK_TYPE_UNSPECIFIED",
+        "DRINK_TYPE_WINE",
+        "DRINK_TYPE_COCKTAIL",
+        "DRINK_TYPE_MOCKTAIL",
+        "DRINK_TYPE_SOFT",
+        "DRINK_TYPE_SPIRIT",
+        "DRINK_TYPE_OTHER",
+        "DRINK_TYPE_BEER"
+      ],
+      "default": "DRINK_TYPE_UNSPECIFIED"
+    },
+    "protobufAny": {
+      "type": "object",
+      "properties": {
+        "@type": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": {}
+    },
+    "rpcStatus": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "message": {
+          "type": "string"
+        },
+        "details": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/protobufAny"
+          }
+        }
+      }
+    },
+    "speakeasyDrink": {
+      "type": "object",
+      "example": {
+        "name": "Gin and Tonic",
+        "type": "DRINK_TYPE_COCKTAIL",
+        "price": 5.99,
+        "stock": 10,
+        "productCode": "2438ac3c-37eb-4902-adef-ed16b4431030"
+      },
+      "properties": {
+        "name": {
+          "type": "string",
+          "example": "Gin and Tonic",
+          "description": "The name of the drink"
+        },
+        "type": {
+          "$ref": "#/definitions/DrinkDrinkType",
+          "example": "DRINK_TYPE_COCKTAIL",
+          "description": "The type of drink"
+        },
+        "price": {
+          "type": "number",
+          "format": "double",
+          "example": 5.99,
+          "description": "The price of the drink"
+        },
+        "stock": {
+          "type": "integer",
+          "format": "int32",
+          "example": 10,
+          "description": "The stock of the drink"
+        },
+        "productCode": {
+          "type": "string",
+          "format": "uuid",
+          "example": "2438ac3c-37eb-4902-adef-ed16b4431030",
+          "description": "Unique drink identifier for server requests",
+          "pattern": "^[0-9A-F]{8}-[0-9A-F]{4}-4[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12}$"
+        }
+      },
+      "description": "A drink served at the speakeasy",
+      "title": "A drink",
+      "required": [
+        "name",
+        "type"
+      ]
+    },
+    "speakeasyGetDrinkResponse": {
+      "type": "object",
+      "properties": {
+        "drink": {
+          "$ref": "#/definitions/speakeasyDrink"
+        }
+      }
+    },
+    "speakeasyListDrinksResponse": {
+      "type": "object",
+      "properties": {
+        "drinks": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/speakeasyDrink"
+          }
+        }
+      }
+    }
+  },
+  "externalDocs": {
+    "description": "Speakeasy API documentation",
+    "url": "https://github.com/speakeasy-api/speakeasy-grpc-gateway-example"
+  }
+}
